@@ -6,27 +6,32 @@ const User = require('../models/user');
 const UserAccount = require('../models/useraccount');
 const Account = require('../models/account');
 const authCheck = require('../middleware/authCheck');
-const transactiontype = require('../models/transactiontype');
+const Transaction = require('../models/transaction');
 
 
-router.post('/transactiontype', function(req, res, next){
-    account.find({accountbalance: req.body.accountbalance});
-    transactiontype.find({transactionamount: req.body.transactionamount});
-    transactiontype.find({deposit: req.body.deposit})
-    .exec()
-    .then(transactiontype => {
-    if(transactiontype == deposit){
-        accountbalance += transactionamount;
-        return res.status(2002).json({
-            message: "Account has been updated" + accountbalance
-        });
-    }else if(transactiontype == transfer){
-        accountbalance -= transactionamount;
-        return res.status(2003).json({
-            message: "Transfer sent. Your current balance is: "  + accountbalance
-        });
-    };
-})
+router.post('/transaction', async function(req, res, next){
+  const sender = await Account.findOne({accountno: req.body.senderno});
+  const receiver = await Account.findOne({accountno: req.body.receiverno});
+
+  if(sender == null || receiver == null)
+  {
+    return res.status(400).json({
+        error: "One or more of the accounts numbers does not exist!"
+    });
+  }
+  if(sender.accountbalance < req.body.amount)
+  {
+    return res.status(400).json({
+        error: "Sorry you do not sufficient funds!"
+    });
+  }
+
+  sender.accountbalance = sender.accountbalance - req.body.amount 
+  sender.save();
+  
+  receiver.accountbalance = receiver.accountbalance + req.body.amount 
+  receiver.save();
+  
 })
 
 
