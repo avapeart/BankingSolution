@@ -9,7 +9,7 @@ const authCheck = require('../middleware/authCheck');
 const Transaction = require('../models/transaction');
 
 
-router.post('/transaction', async function(req, res, next){
+router.post('/transfer', async function(req, res, next){
   const sender = await Account.findOne({accountno: req.body.senderno});
   const receiver = await Account.findOne({accountno: req.body.receiverno});
 
@@ -31,10 +31,26 @@ router.post('/transaction', async function(req, res, next){
   
   receiver.accountbalance = receiver.accountbalance + req.body.amount 
   receiver.save();
-  
 })
 
 
+router.post('/deposit', async function(req, res, next){
+    const sender = await Account.findOne({accountno: req.body.senderno});
+   
+    if(sender == null)
+    {
+      return res.status(400).json({
+          error: "Invalid account number!"
+      });
+    }
+
+    sender.accountbalance = sender.accountbalance + req.body.deposit 
+    sender.save()
+    return res.status(409).json({
+        message: "Deposit successfull"
+    });
+    
+  })
 
 
 router.post('/account', async function(req, res, next){
