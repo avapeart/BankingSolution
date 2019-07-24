@@ -18,9 +18,9 @@ const UserSchema = new Schema({
         required: true,
         trim: true
     },
-    gender:{
-        type: Boolean,
-    },
+    // gender:{
+    //     type: Boolean,
+    // },
     phonenumber:{
       type: Number,
       unique: true,
@@ -31,9 +31,9 @@ const UserSchema = new Schema({
         required: true,
         unique: true,
     },
-    dateofbirth: {
-        type: String,
-    }
+    // dateofbirth: {
+    //     type: Date,
+    // }
 });
 var User = mongoose.model('User', UserSchema);
 module.exports = User;

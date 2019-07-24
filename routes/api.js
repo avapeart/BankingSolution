@@ -1,127 +1,105 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 const UserAccount = require('../models/useraccount');
 const Account = require('../models/account');
+const authCheck = require('../middleware/authCheck');
+const transactiontype = require('../models/transactiontype');
 
 
-// GET 
-router.get('/users', function(req, res, next) {
-    // return res.send("working");
-    db.Member.find({country_id : 10}).sort({score : -1}).limit(1)
-     User.find({}).sort().then(function(users){
-        res.send(users)
-    });
-});
+router.post('/transactiontype', function(req, res, next){
+    account.find({accountbalance: req.body.accountbalance});
+    transactiontype.find({transactionamount: req.body.transactionamount});
+    transactiontype.find({deposit: req.body.deposit})
+    .exec()
+    .then(transactiontype => {
+    if(transactiontype == deposit){
+        accountbalance += transactionamount;
+        return res.status(2002).json({
+            message: "Account has been updated" + accountbalance
+        });
+    }else if(transactiontype == transfer){
+        accountbalance -= transactionamount;
+        return res.status(2003).json({
+            message: "Transfer sent. Your current balance is: "  + accountbalance
+        });
+    };
+})
+})
 
-router.post('/account', function(req, res, next){
 
-    Account.count({}, function(err, count){
-         var accNum = 999;
-        if(count > 0){
-         Account.find({}).sort({accountno: -1}).limit(1).then(users => {
-               
-                let account = new Account(req.body);
-                account.accountno = users[0].accountno+1
-                account.save();
-       
-           });
-        }
-        else
-        {
-            let account = new Account(req.body);
-            account.accountno = accNum+1
-            account.save()
-            console.log(account)
-        } 
-        
-    });
-    // }) .catch(err => {
-    //     res.status(400).send(err);
-    //   });
 
-        // let user = new Account(req.body);
-        // user.save().then(item => {
-          
-        //     let account = new Account();
-         
+
+router.post('/account', async function(req, res, next){
+    const account = await Account.create_account(req)
     
-        //   }) 
-        //   .catch(err => {
-        //     res.status(400).send(err);
-        //   });
-        // User.create(req.body).then(function(user){
-        //  res.send(user);
-        // }).catch(next);
-        console.log(req.body);
+    res.status(200).send(account);
+    console.log(account)
      });
-    
 
-  router.post('/createusers', function(req, res, next){
-
-    let user = new Acc(req.body);
+    router.post("/useraccount", function(req, res, next){
     user.save().then(item => {
       
-        let userAccount = new UserAccount();
-        userAccount.userid = item._id;
-        userAccount.email = req.body.email;
-        userAccount.password = req.body.password;
-        userAccount.save();
-        res.send("item saved to database" + userAccount);
+       
+    
+          }) 
 
-      }) 
-      .catch(err => {
-        res.status(400).send(err);
-      });
-    // User.create(req.body).then(function(user){
-    //  res.send(user);
-    // }).catch(next);
-    console.log(req.body);
- });
+     })    
 
- router.post('/signup', (req, res, next)=>{
-     User.find({email: req.body.emil})
-     .exec()
-     .then(user => {
-         if (user.length >= 1) {
-             return res.status(409).json({
-                 message: "Email already exists"
-             });
-            } else{
-                bcrypt.hash(req.body.password, 10, (err, hash)=> {
-                    if (err) {
-                        return res.status(500).json({
-                            error: err
-                        });
-                    }else{
-                        const user = new User({
-                            email: req.body.email,
-                            phonenumber: req.body.phonenumber,
-                            trn: req.body.trn,
-                            username: req.body.username,
-                            password: hash
-                        });
-                        user
-                        .save()
-                        .then (result =>{
-                        console.log(result);
-                        res.status(201).json({
-                            message: "User Created"
-                        });
-                    })
-                    .catch(err => {
-                        console.log(err);
-                        res.status(500).json({
-                            error: err
-                        });
-                    });
 
-                    }
+ router.post('/signup', async (req, res, next)=>{
+
+    let users = await User.find({email: req.body.email}).exec()
+    if (users.length >= 1) {
+        return res.status(409).json({
+            message: "Email already exists"
+        });
+    }
+    else {
+        bcrypt.hash(req.body.password, 10, async (err, hash)=> {
+            if (err) {
+                return res.status(500).json({
+                    error: err
                 });
             }
-     });
+            else{
+                const user = new User({
+                    email: req.body.email,
+                    phonenumber: req.body.phonenumber,
+                    trn: req.body.trn,
+                    username: req.body.username,
+                    password: hash
+                });
+
+                try 
+                {
+                    const usr = await user.save()
+                    const acc = await Account.create_account(req)
+    
+                    let userAccount = new UserAccount()
+                    userAccount.userid = usr._id
+                    userAccount.accountno = acc._id
+                    const usracc = await userAccount.save()
+
+                    res.status(201).json({
+                        message: "User Created"
+                    });
+                    
+                    
+                } catch (err) 
+                {
+                    return res.status(400).json({
+                        error: err
+                    });
+                }
+               
+
+            }
+        });
+    }
+    console.log(users);
  });
 
  router.post('/login', function(req, res, next){
