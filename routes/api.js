@@ -6,8 +6,17 @@ const User = require('../models/user');
 const UserAccount = require('../models/useraccount');
 const Account = require('../models/account');
 const authCheck = require('../middleware/authCheck');
+const CORSHeader = require('../middleware/CORSHeader');
+
 const Transaction = require('../models/transaction');
 
+  
+
+function addCORSHeaders(res)
+{
+
+}
+ 
 
 router.post('/transfer', authCheck, async function(req, res, next){
   const sender = await Account.findOne({accountno: req.body.senderno});
@@ -73,9 +82,17 @@ router.post('/account', async function(req, res, next){
 
      })    
 
+     router.options('/signup', function(req, res, next){
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader('Access-Control-Allow-Methods', '*');
+        res.setHeader("Access-Control-Allow-Headers", "*");
+        res.sendStatus(200)
+      })
 
  router.post('/signup', async (req, res, next)=>{
-
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader('Access-Control-Allow-Methods', '*');
+    res.setHeader("Access-Control-Allow-Headers", "*");
     let users = await User.find({email: req.body.email}).exec()
     if (users.length >= 1) {
         return res.status(409).json({
@@ -127,7 +144,11 @@ router.post('/account', async function(req, res, next){
     console.log(users);
  });
 
- router.post('/login', function(req, res, next){
+ router.options('/login',CORSHeader, function(req, res, next){
+    res.sendStatus(200)
+  })
+
+ router.post('/login',CORSHeader, function(req, res, next){
      User.find({email: req.body.email})
      .exec()
      .then(user=>{
