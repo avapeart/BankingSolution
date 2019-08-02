@@ -9,10 +9,10 @@ const authCheck = require('../middleware/authCheck');
 const Transaction = require('../models/transaction');
 
 
-router.post('/transfer', async function(req, res, next){
+router.post('/transfer', authCheck, async function(req, res, next){
   const sender = await Account.findOne({accountno: req.body.senderno});
   const receiver = await Account.findOne({accountno: req.body.receiverno});
-
+    console.log(sender+" "+receiver)
   if(sender == null || receiver == null)
   {
     return res.status(400).json({
@@ -31,6 +31,10 @@ router.post('/transfer', async function(req, res, next){
   
   receiver.accountbalance = receiver.accountbalance + req.body.amount 
   receiver.save();
+
+  return res.status(200).json({
+    message: "Transfer successfull"
+});
 })
 
 
@@ -46,7 +50,7 @@ router.post('/deposit', async function(req, res, next){
 
     sender.accountbalance = sender.accountbalance + req.body.deposit 
     sender.save()
-    return res.status(409).json({
+    return res.status(200).json({
         message: "Deposit successfull"
     });
     
