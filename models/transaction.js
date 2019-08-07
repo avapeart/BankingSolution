@@ -6,17 +6,17 @@ const TransactionSchema = new Schema({
     type: { 
         type: String
     },
-    accountno: {
+    senderno: {
         type: Schema.Types.ObjectId, ref: 'Account', required: true
       },
-    receiveraccountnumber:{
+    receiverno:{
         type: Schema.Types.ObjectId, ref: 'Account'
     },
     amount:{
         type: Number,
     },
     transactiontype:{
-        type: Schema.Types.ObjectId, ref: 'Transactiontype',required: true
+        type: String
     } 
 });
 

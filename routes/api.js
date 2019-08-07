@@ -7,21 +7,52 @@ const UserAccount = require('../models/useraccount');
 const Account = require('../models/account');
 const authCheck = require('../middleware/authCheck');
 const CORSHeader = require('../middleware/CORSHeader');
-
 const Transaction = require('../models/transaction');
 
-  
+router.options('/transactions', CORSHeader, function(req, res, next){  
+    res.sendStatus(200)
+  })
 
-function addCORSHeaders(res)
-{
+router.get('/transactions', CORSHeader, authCheck, async function(req, res, next){
+    const useraccount = await UserAccount.findOne({userid: req.userData.userId})
+    const transactions = await Transaction.find().or({senderno:useraccount.accountno},{receiverno:useraccount.accountno})
 
-}
- 
+    
+    return res.status(200).json({
+        transactions
+    })
 
-router.post('/transfer', authCheck, async function(req, res, next){
+});
+
+router.options('/getAccount', CORSHeader, function(req, res, next){
+    res.sendStatus(200)
+})
+
+router.get('/getAccount', CORSHeader, authCheck, async function(req, res, next){
+    const useraccount = await UserAccount.findOne({userid: req.userData.userId})
+    const account = await Account.findOne({_id: useraccount.accountno}) 
+    console.log(useraccount)
+    if(useraccount == null){
+        return res.status(400).json({
+            error: 'User account does not exist!'
+        })
+    }
+
+    return res.status(200).json({
+        account
+    })
+   
+})
+
+router.options('/transfer', CORSHeader, function(req, res, next){
+      
+    res.sendStatus(200)
+  })
+
+router.post('/transfer', CORSHeader, authCheck, async function(req, res, next){
   const sender = await Account.findOne({accountno: req.body.senderno});
   const receiver = await Account.findOne({accountno: req.body.receiverno});
-    console.log(sender+" "+receiver)
+    // console.log(sender+" "+receiver)
   if(sender == null || receiver == null)
   {
     return res.status(400).json({
@@ -38,8 +69,16 @@ router.post('/transfer', authCheck, async function(req, res, next){
   sender.accountbalance = sender.accountbalance - req.body.amount 
   sender.save();
   
-  receiver.accountbalance = receiver.accountbalance + req.body.amount 
+  receiver.accountbalance = receiver.accountbalance + parseInt( req.body.amount)
   receiver.save();
+
+  const transaction= new Transaction({
+      type: 'Transfer',
+      senderno: sender._id,
+      receiverno: receiver._id,
+      amount: req.body.amount
+  });
+  transaction.save();
 
   return res.status(200).json({
     message: "Transfer successfull"
@@ -73,26 +112,21 @@ router.post('/account', async function(req, res, next){
     console.log(account)
      });
 
-    router.post("/useraccount", function(req, res, next){
-    user.save().then(item => {
+    // router.post("/useraccount", function(req, res, next){
+    // user.save().then(item => {
       
        
     
-          }) 
+    //       }) 
 
-     })    
+    //  })    
 
-     router.options('/signup', function(req, res, next){
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader('Access-Control-Allow-Methods', '*');
-        res.setHeader("Access-Control-Allow-Headers", "*");
+     router.options('/signup', CORSHeader, function(req, res, next){
+      
         res.sendStatus(200)
       })
 
- router.post('/signup', async (req, res, next)=>{
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader('Access-Control-Allow-Methods', '*');
-    res.setHeader("Access-Control-Allow-Headers", "*");
+ router.post('/signup', CORSHeader, async (req, res, next)=>{
     let users = await User.find({email: req.body.email}).exec()
     if (users.length >= 1) {
         return res.status(409).json({
@@ -144,7 +178,7 @@ router.post('/account', async function(req, res, next){
     console.log(users);
  });
 
- router.options('/login',CORSHeader, function(req, res, next){
+ router.options('/login', CORSHeader, function(req, res, next){
     res.sendStatus(200)
   })
 

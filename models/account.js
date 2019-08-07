@@ -17,6 +17,17 @@ const AccountSchema = new Schema({
       }
 });
 
+AccountSchema.statics.add_salary = async function add_salary(){
+
+    const accounts = await Account.find({});
+    console.log(accounts.length)
+    for (let i = 0; i < accounts.length; i++){
+      const account = accounts[i];
+      account.accountbalance = account.accountbalance+5000;
+      account.save();
+    }
+  }
+
 
 AccountSchema.statics.create_account = async function create_account(req){
 
