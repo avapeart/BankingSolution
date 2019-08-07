@@ -9,6 +9,64 @@ const authCheck = require('../middleware/authCheck');
 const CORSHeader = require('../middleware/CORSHeader');
 const Transaction = require('../models/transaction');
 
+router.options('/jointAccount', CORSHeader, function(req, res, next){  
+    res.sendStatus(200)
+  })
+
+router.post('/jointAccount', CORSHeader, authCheck, async function(req, res, next){
+    let users = await User.find({email: req.body.email}).exec()
+    if (users.length >= 1) {
+        return res.status(409).json({
+            message: "Email already exists"
+        });
+    }
+    else {
+        bcrypt.hash(req.body.password, 10, async (err, hash)=> {
+            if (err) {
+                return res.status(500).json({
+                    error: err
+                });
+            }
+            else{
+                const user = new User({
+                    email: req.body.email,
+                    phonenumber: req.body.phonenumber,
+                    trn: req.body.trn,
+                    username: req.body.username,
+                    password: hash
+                });
+
+                try 
+                {
+                    const usr = await user.save()
+                    const acc = await UserAccount.findOne({userid: req.userData.userId})
+
+                    let userAccount = new UserAccount()
+                    userAccount.userid = usr._id
+                    userAccount.accountno = acc.accountno
+                    const usracc = await userAccount.save()
+
+                    res.status(201).json({
+                        message: "User Created"
+                    });
+                    
+                    
+                } catch (err) 
+                {
+                    return res.status(400).json({
+                        error: err
+                    });
+                }
+               
+
+            }
+        });
+    }
+    console.log(users);
+ });
+        
+
+
 router.options('/transactions', CORSHeader, function(req, res, next){  
     res.sendStatus(200)
   })

@@ -17,7 +17,12 @@ const TransactionSchema = new Schema({
     },
     transactiontype:{
         type: String
+    },
+    timestamp:{
+        type: Date,
+        default: Date.now
     } 
+
 });
 
 var Transaction = mongoose.model('Transaction', TransactionSchema);
